@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Room Scheduler</title>
+  <link type="text/css" rel="stylesheet" href="https://www.gstatic.com/firebasejs/ui/6.0.1/firebase-ui-auth.css" />
+  <style>
+    body {
+      font-family: sans-serif;
+      max-width: 640px;
+      margin: 1rem auto;
+      padding: 0 1rem;
+    }
+
+    h1 {
+      margin-top: 0;
+    }
+
+    .auth-section {
+      margin-bottom: 1.5rem;
+    }
+
+    #firebaseui-auth-container {
+      margin: 1rem 0;
+    }
+
+    #sign-out {
+      padding: 0.4rem 0.8rem;
+      cursor: pointer;
+    }
+
+    .error {
+      color: #c00;
+    }
+
+    .room-list {
+      list-style: none;
+      padding: 0;
+    }
+
+    .room-list li {
+      padding: 0.5rem 0;
+      border-bottom: 1px solid #eee;
+    }
+
+    .add-room {
+      margin: 1.5rem 0;
+    }
+
+    .add-room input {
+      padding: 0.4rem;
+      margin-right: 0.5rem;
+    }
+
+    .add-room button {
+      padding: 0.4rem 0.8rem;
+      cursor: pointer;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>Room Scheduler</h1>
+
+  <div class="auth-section">
+    <div id="firebaseui-auth-container"></div>
+    <button id="sign-out" hidden>Sign Out</button>
+    <div id="login-info" hidden>
+      <p>Signed in as: <strong>{{ user_data.email if user_data else '' }}</strong></p>
+    </div>
+  </div>
+
+  {% if error_message %}
+  <p class="error">{{ error_message }}</p>
+  {% endif %}
+
+
+  <h2>Rooms</h2>
+  <ul class="room-list">
+    {% for room in rooms %}
+    <li>{{ room.name }}</li>
+    {% else %}
+    <li>No rooms yet. Add one below (sign in first).</li>
+    {% endfor %}
+  </ul>
+
+  {% if user_data %}
+  <div class="add-room">
+    <h3>Add a room</h3>
+    <form method="post" action="/">
+      <input type="text" name="room_name" placeholder="Room name" required maxlength="200" />
+      <button type="submit">Add room</button>
+    </form>
+  </div>
+  {% endif %}
+
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/ui/6.0.1/firebase-ui-auth.js"></script>
+  <script>
+    var firebaseConfig = {
+      apiKey: "AIzaSyDZjEs18lq3XfzUBvmMxBtpQYrbS3O1QSM",
+      authDomain: "room-scheduler-e35bf.firebaseapp.com",
+      projectId: "room-scheduler-e35bf",
+      storageBucket: "room-scheduler-e35bf.firebasestorage.app",
+      messagingSenderId: "610931328882",
+      appId: "1:610931328882:web:c1833c3f0391e54d863feb",
+      measurementId: "G-YLJWL0M5YQ"
+    };
+    firebase.initializeApp(firebaseConfig);
+  </script>
+  <script src="/static/firebase-login.js"></script>
+</body>
+
+</html>
