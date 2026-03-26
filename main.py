@@ -8,6 +8,7 @@ import google.oauth2.id_token
 
 from bookings import (
     create_booking,
+    delete_booking,
     list_user_bookings_all,
     list_user_bookings_for_room,
     parse_date_yyyy_mm_dd,
@@ -114,6 +115,25 @@ def root():
                                     )
                                 else:
                                     return redirect(url_for("root"))
+
+                elif form_type == "delete_booking":
+                    room_id = (request.form.get("room_id") or "").strip()
+                    day_id = (request.form.get("day_id") or "").strip()
+                    booking_id = (request.form.get("booking_id") or "").strip()
+                    return_room = (
+                        request.form.get("return_bookings_room") or ""
+                    ).strip()
+                    ok, err = delete_booking(
+                        db, room_id, day_id, booking_id, user_uid
+                    )
+                    if not ok:
+                        error_message = err or "Could not delete booking."
+                    elif return_room:
+                        return redirect(
+                            url_for("root", bookings_room=return_room)
+                        )
+                    else:
+                        return redirect(url_for("root"))
 
                 else:
                     error_message = "Unknown form."

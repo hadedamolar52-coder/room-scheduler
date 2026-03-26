@@ -109,6 +109,34 @@ def create_booking(
     return True, None
 
 
+def delete_booking(
+    db: firestore.Client,
+    room_id: str,
+    day_id: str,
+    booking_id: str,
+    user_uid: str,
+) -> tuple[bool, str | None]:
+    if not room_id or not day_id or not booking_id:
+        return False, "Missing booking reference."
+
+    ref = (
+        db.collection(ROOMS_COLLECTION)
+        .document(room_id)
+        .collection(DAYS_SUBCOLLECTION)
+        .document(day_id)
+        .collection(BOOKINGS_SUBCOLLECTION)
+        .document(booking_id)
+    )
+    snap = ref.get()
+    if not snap.exists:
+        return False, "Booking not found."
+    data = snap.to_dict() or {}
+    if data.get("user_uid") != user_uid:
+        return False, "You can only delete your own booking."
+    ref.delete()
+    return True, None
+
+
 def list_user_bookings_all(
     db: firestore.Client, user_uid: str
 ) -> list[dict[str, Any]]:

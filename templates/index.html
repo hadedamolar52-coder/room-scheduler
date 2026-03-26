@@ -86,6 +86,17 @@
     table.bookings th {
       background: #f5f5f5;
     }
+
+    table.bookings form.inline-delete {
+      display: inline;
+      margin: 0;
+    }
+
+    table.bookings .btn-delete {
+      padding: 0.25rem 0.5rem;
+      cursor: pointer;
+      font-size: 0.85rem;
+    }
   </style>
 </head>
 
@@ -167,6 +178,7 @@
         <th>Date</th>
         <th>Start</th>
         <th>End</th>
+        <th></th>
       </tr>
     </thead>
     <tbody>
@@ -176,6 +188,15 @@
         <td>{{ b.day_id }}</td>
         <td>{{ b.start_label }}</td>
         <td>{{ b.end_label }}</td>
+        <td>
+          <form class="inline-delete" method="post" action="{{ url_for('root') }}">
+            <input type="hidden" name="form_type" value="delete_booking" />
+            <input type="hidden" name="room_id" value="{{ b.room_id }}" />
+            <input type="hidden" name="day_id" value="{{ b.day_id }}" />
+            <input type="hidden" name="booking_id" value="{{ b.booking_id }}" />
+            <button type="submit" class="btn-delete">Delete</button>
+          </form>
+        </td>
       </tr>
       {% endfor %}
     </tbody>
@@ -208,6 +229,7 @@
         <th>Date</th>
         <th>Start</th>
         <th>End</th>
+        <th></th>
       </tr>
     </thead>
     <tbody>
@@ -216,6 +238,16 @@
         <td>{{ b.day_id }}</td>
         <td>{{ b.start_label }}</td>
         <td>{{ b.end_label }}</td>
+        <td>
+          <form class="inline-delete" method="post" action="{{ url_for('root') }}">
+            <input type="hidden" name="form_type" value="delete_booking" />
+            <input type="hidden" name="room_id" value="{{ b.room_id }}" />
+            <input type="hidden" name="day_id" value="{{ b.day_id }}" />
+            <input type="hidden" name="booking_id" value="{{ b.booking_id }}" />
+            <input type="hidden" name="return_bookings_room" value="{{ filter_room_id }}" />
+            <button type="submit" class="btn-delete">Delete</button>
+          </form>
+        </td>
       </tr>
       {% endfor %}
     </tbody>
