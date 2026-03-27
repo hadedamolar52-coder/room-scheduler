@@ -109,6 +109,73 @@ def create_booking(
     return True, None
 
 
+def get_booking(
+    db: firestore.Client,
+    room_id: str,
+    day_id: str,
+    booking_id: str,
+) -> dict[str, Any] | None:
+    ref = (
+        db.collection(ROOMS_COLLECTION)
+        .document(room_id)
+        .collection(DAYS_SUBCOLLECTION)
+        .document(day_id)
+        .collection(BOOKINGS_SUBCOLLECTION)
+        .document(booking_id)
+    )
+    snap = ref.get()
+    if not snap.exists:
+        return None
+    data = snap.to_dict() or {}
+    return {
+        "booking_id": booking_id,
+        **data,
+    }
+
+
+def update_booking(
+    db: firestore.Client,
+    room_id: str,
+    day_id: str,
+    booking_id: str,
+    user_uid: str,
+    start_minutes: int,
+    end_minutes: int,
+) -> tuple[bool, str | None]:
+
+    if start_minutes < 0 or end_minutes > DAY_MINUTES or start_minutes >= end_minutes:
+        return False, "Invalid time range (use HH:MM, start before end, same day)."
+
+    booking_data = get_booking(db, room_id, day_id, booking_id)
+    if booking_data is None:
+        return False, "Booking not found."
+    if booking_data.get("user_uid") != user_uid:
+        return False, "You can only edit your own booking."
+
+    room_ref = db.collection(ROOMS_COLLECTION).document(room_id)
+    day_ref = room_ref.collection(DAYS_SUBCOLLECTION).document(day_id)
+    bookings_ref = day_ref.collection(BOOKINGS_SUBCOLLECTION)
+
+    for b in bookings_ref.stream():
+        if b.id == booking_id:
+            continue
+        d = b.to_dict() or {}
+        s = int(d.get("start_minutes", -1))
+        e = int(d.get("end_minutes", -1))
+        if intervals_overlap(start_minutes, end_minutes, s, e):
+            return False, "That time overlaps another booking for this room."
+
+    ref = bookings_ref.document(booking_id)
+    ref.update(
+        {
+            "start_minutes": start_minutes,
+            "end_minutes": end_minutes,
+            "created_at": firestore.SERVER_TIMESTAMP,
+        }
+    )
+    return True, None
+
+
 def delete_booking(
     db: firestore.Client,
     room_id: str,

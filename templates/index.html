@@ -97,6 +97,19 @@
       cursor: pointer;
       font-size: 0.85rem;
     }
+
+    table.bookings a.btn-edit {
+      display: inline-block;
+      padding: 0.25rem 0.5rem;
+      margin-right: 0.25rem;
+      text-decoration: none;
+      cursor: pointer;
+      font-size: 0.85rem;
+      border: 1px solid #bbb;
+      color: #111;
+      background: #fafafa;
+      border-radius: 3px;
+    }
   </style>
 </head>
 
@@ -189,6 +202,7 @@
         <td>{{ b.start_label }}</td>
         <td>{{ b.end_label }}</td>
         <td>
+          <a class="btn-edit" href="{{ url_for('edit_booking', room_id=b.room_id, day_id=b.day_id, booking_id=b.booking_id, return_bookings_room=filter_room_id) }}">Edit</a>
           <form class="inline-delete" method="post" action="{{ url_for('root') }}">
             <input type="hidden" name="form_type" value="delete_booking" />
             <input type="hidden" name="room_id" value="{{ b.room_id }}" />
@@ -239,6 +253,7 @@
         <td>{{ b.start_label }}</td>
         <td>{{ b.end_label }}</td>
         <td>
+          <a class="btn-edit" href="{{ url_for('edit_booking', room_id=b.room_id, day_id=b.day_id, booking_id=b.booking_id) }}">Edit</a>
           <form class="inline-delete" method="post" action="{{ url_for('root') }}">
             <input type="hidden" name="form_type" value="delete_booking" />
             <input type="hidden" name="room_id" value="{{ b.room_id }}" />

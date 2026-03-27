@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Edit Booking</title>
+  <link type="text/css" rel="stylesheet" href="https://www.gstatic.com/firebasejs/ui/6.0.1/firebase-ui-auth.css" />
+  <style>
+    body {
+      font-family: sans-serif;
+      max-width: 720px;
+      margin: 1rem auto;
+      padding: 0 1rem;
+    }
+
+    h1 {
+      margin-top: 0;
+    }
+
+    .error {
+      color: #c00;
+    }
+
+    form {
+      margin-top: 1rem;
+    }
+
+    label {
+      display: inline-block;
+      margin-right: 0.75rem;
+      margin-top: 0.75rem;
+    }
+
+    input {
+      padding: 0.4rem;
+      margin-top: 0.25rem;
+    }
+
+    button {
+      padding: 0.45rem 0.9rem;
+      cursor: pointer;
+      margin-top: 1rem;
+    }
+
+    .row-actions {
+      margin-top: 1rem;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>Edit Booking</h1>
+
+  {% if error_message %}
+  <p class="error">{{ error_message }}</p>
+  {% endif %}
+
+  <p>
+    Room: <strong>{{ room_name }}</strong>
+    <br />
+    Date: <strong>{{ day_id }}</strong>
+  </p>
+
+  <form method="post" action="{{ url_for('edit_booking') }}">
+    <input type="hidden" name="room_id" value="{{ room_id }}" />
+    <input type="hidden" name="day_id" value="{{ day_id }}" />
+    <input type="hidden" name="booking_id" value="{{ booking_id }}" />
+    <input type="hidden" name="return_bookings_room" value="{{ return_bookings_room }}" />
+
+    <label>
+      Start (24h)
+      <input type="time" name="start_time" value="{{ start_time }}" required />
+    </label>
+
+    <label>
+      End (24h)
+      <input type="time" name="end_time" value="{{ end_time }}" required />
+    </label>
+
+    <div class="row-actions">
+      <button type="submit">Save changes</button>
+      {% if return_bookings_room %}
+      <a href="{{ url_for('root', bookings_room=return_bookings_room) }}">Cancel</a>
+      {% else %}
+      <a href="{{ url_for('root') }}">Cancel</a>
+      {% endif %}
+    </div>
+  </form>
+</body>
+
+</html>
+

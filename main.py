@@ -13,6 +13,9 @@ from bookings import (
     list_user_bookings_for_room,
     parse_date_yyyy_mm_dd,
     parse_time_hhmm,
+    update_booking,
+    get_booking,
+    format_hhmm,
 )
 from firestore_models import ROOMS_COLLECTION
 
@@ -160,6 +163,110 @@ def root():
         my_bookings_room=my_bookings_room,
         filter_room_id=filter_room_id,
     )
+
+
+@app.route("/booking/edit", methods=["GET", "POST"])
+def edit_booking():
+    id_token = request.cookies.get("token")
+    claims = verify_firebase_token(id_token)
+
+    if not claims:
+        return redirect(url_for("root"))
+
+    user_uid = _user_uid(claims)
+    if not user_uid:
+        return redirect(url_for("root"))
+
+    if request.method == "GET":
+        room_id = (request.args.get("room_id") or "").strip()
+        day_id = (request.args.get("day_id") or "").strip()
+        booking_id = (request.args.get("booking_id") or "").strip()
+        return_room = (request.args.get("return_bookings_room") or "").strip()
+
+        if not room_id or not day_id or not booking_id:
+            return redirect(url_for("root"))
+
+        booking = get_booking(db, room_id, day_id, booking_id)
+        if booking is None or booking.get("user_uid") != user_uid:
+            return redirect(url_for("root"))
+
+        start_minutes = int(booking.get("start_minutes", 0))
+        end_minutes = int(booking.get("end_minutes", 0))
+
+        room_name = ""
+        room_snap = db.collection(ROOMS_COLLECTION).document(room_id).get()
+        if room_snap.exists:
+            room_name = (room_snap.to_dict() or {}).get("name", "")
+
+        return render_template(
+            "edit_booking.html",
+            user_data=claims,
+            error_message=None,
+            room_id=room_id,
+            room_name=room_name,
+            day_id=day_id,
+            booking_id=booking_id,
+            start_time=format_hhmm(start_minutes),
+            end_time=format_hhmm(end_minutes),
+            return_bookings_room=return_room,
+            bookings_room_query=return_room,
+        )
+
+    room_id = (request.form.get("room_id") or "").strip()
+    day_id = (request.form.get("day_id") or "").strip()
+    booking_id = (request.form.get("booking_id") or "").strip()
+    return_room = (request.form.get("return_bookings_room") or "").strip()
+
+    if not room_id or not day_id or not booking_id:
+        return redirect(url_for("root"))
+
+    start_s = (request.form.get("start_time") or "").strip()
+    end_s = (request.form.get("end_time") or "").strip()
+
+    sm = parse_time_hhmm(start_s)
+    em = parse_time_hhmm(end_s)
+    if sm is None or em is None:
+        booking = get_booking(db, room_id, day_id, booking_id)
+        start_minutes = int((booking or {}).get("start_minutes", 0))
+        end_minutes = int((booking or {}).get("end_minutes", 0))
+        return render_template(
+            "edit_booking.html",
+            user_data=claims,
+            error_message="Start and end times must be HH:MM (24h).",
+            room_id=room_id,
+            room_name=(db.collection(ROOMS_COLLECTION).document(room_id).get().to_dict() or {}).get("name", ""),
+            day_id=day_id,
+            booking_id=booking_id,
+            start_time=format_hhmm(start_minutes),
+            end_time=format_hhmm(end_minutes),
+            return_bookings_room=return_room,
+            bookings_room_query=return_room,
+        )
+
+    ok, err = update_booking(
+        db, room_id, day_id, booking_id, user_uid, sm, em
+    )
+    if not ok:
+        booking = get_booking(db, room_id, day_id, booking_id)
+        start_minutes = int((booking or {}).get("start_minutes", 0))
+        end_minutes = int((booking or {}).get("end_minutes", 0))
+        return render_template(
+            "edit_booking.html",
+            user_data=claims,
+            error_message=err or "Could not update booking.",
+            room_id=room_id,
+            room_name=(db.collection(ROOMS_COLLECTION).document(room_id).get().to_dict() or {}).get("name", ""),
+            day_id=day_id,
+            booking_id=booking_id,
+            start_time=format_hhmm(start_minutes),
+            end_time=format_hhmm(end_minutes),
+            return_bookings_room=return_room,
+            bookings_room_query=return_room,
+        )
+
+    if return_room:
+        return redirect(url_for("root", bookings_room=return_room))
+    return redirect(url_for("root"))
 
 
 if __name__ == "__main__":
