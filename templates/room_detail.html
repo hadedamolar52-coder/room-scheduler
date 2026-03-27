@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Room Detail</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      max-width: 720px;
+      margin: 1rem auto;
+      padding: 0 1rem;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+      font-size: 0.95rem;
+    }
+
+    th,
+    td {
+      border: 1px solid #ddd;
+      padding: 0.45rem 0.55rem;
+      text-align: left;
+    }
+
+    th {
+      background: #f5f5f5;
+    }
+  </style>
+</head>
+
+<body>
+  <p><a href="{{ url_for('root') }}">&larr; Back to main page</a></p>
+  <h1>Room: {{ room_name }}</h1>
+
+  <h2>All bookings for this room</h2>
+  {% if room_bookings %}
+  <table>
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Start</th>
+        <th>End</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for b in room_bookings %}
+      <tr>
+        <td>{{ b.day_id }}</td>
+        <td>{{ b.start_label }}</td>
+        <td>{{ b.end_label }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p>No bookings for this room yet.</p>
+  {% endif %}
+</body>
+
+</html>
+

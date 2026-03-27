@@ -147,7 +147,7 @@
   <ul class="room-list">
     {% for room in rooms %}
     <li>
-      {{ room.name }}
+      <a href="{{ url_for('room_detail', room_id=room.id) }}">{{ room.name }}</a>
       {% if user_data and room.created_by_uid == current_user_uid %}
       <form class="room-delete-form" method="post" action="{{ url_for('root') }}">
         <input type="hidden" name="form_type" value="delete_room" />
@@ -162,6 +162,43 @@
     <li>No rooms yet. Add one below (sign in first).</li>
     {% endfor %}
   </ul>
+
+  <div class="filter-bookings">
+    <h3>Bookings for a single day (all rooms)</h3>
+    <form method="get" action="{{ url_for('root') }}">
+      <label>
+        Day
+        <input type="date" name="day_filter" value="{{ day_filter }}" required />
+      </label>
+      <button type="submit">Filter day</button>
+    </form>
+  </div>
+
+  {% if day_filter %}
+  <h3>All room bookings on {{ day_filter }}</h3>
+  {% if day_filter_bookings %}
+  <table class="bookings">
+    <thead>
+      <tr>
+        <th>Room</th>
+        <th>Start</th>
+        <th>End</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for b in day_filter_bookings %}
+      <tr>
+        <td>{{ b.room_name }}</td>
+        <td>{{ b.start_label }}</td>
+        <td>{{ b.end_label }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p>No bookings found for this day.</p>
+  {% endif %}
+  {% endif %}
 
   {% if user_data %}
   <div class="add-room">

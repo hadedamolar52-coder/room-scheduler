@@ -243,3 +243,42 @@ def list_user_bookings_for_room(
 
     out.sort(key=lambda x: (x["day_id"], x["start_minutes"]))
     return out
+
+
+def list_bookings_for_day_all_rooms(
+    db: firestore.Client, day_id: str
+) -> list[dict[str, Any]]:
+    out: list[dict[str, Any]] = []
+    for room in db.collection(ROOMS_COLLECTION).stream():
+        room_id = room.id
+        room_name = (room.to_dict() or {}).get("name", "")
+        day_ref = room.reference.collection(DAYS_SUBCOLLECTION).document(day_id)
+        day_snap = day_ref.get()
+        if not day_snap.exists:
+            continue
+        for b in day_ref.collection(BOOKINGS_SUBCOLLECTION).stream():
+            data = b.to_dict() or {}
+            out.append(_booking_dict(room_id, room_name, day_id, b.id, data))
+
+    out.sort(key=lambda x: (x["start_minutes"], x["room_name"]))
+    return out
+
+
+def list_all_bookings_for_room(
+    db: firestore.Client, room_id: str
+) -> list[dict[str, Any]]:
+    room_ref = db.collection(ROOMS_COLLECTION).document(room_id)
+    room_snap = room_ref.get()
+    if not room_snap.exists:
+        return []
+    room_name = (room_snap.to_dict() or {}).get("name", "")
+
+    out: list[dict[str, Any]] = []
+    for day_doc in room_ref.collection(DAYS_SUBCOLLECTION).stream():
+        day_id = day_doc.id
+        for b in day_doc.reference.collection(BOOKINGS_SUBCOLLECTION).stream():
+            data = b.to_dict() or {}
+            out.append(_booking_dict(room_id, room_name, day_id, b.id, data))
+
+    out.sort(key=lambda x: (x["day_id"], x["start_minutes"]))
+    return out

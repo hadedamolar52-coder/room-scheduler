@@ -9,6 +9,8 @@ import google.oauth2.id_token
 from bookings import (
     create_booking,
     delete_booking,
+    list_all_bookings_for_room,
+    list_bookings_for_day_all_rooms,
     list_user_bookings_all,
     list_user_bookings_for_room,
     parse_date_yyyy_mm_dd,
@@ -160,6 +162,8 @@ def root():
     user_uid = _user_uid(claims) if claims else None
 
     filter_room_id = (request.args.get("bookings_room") or "").strip()
+    day_filter = (request.args.get("day_filter") or "").strip()
+    day_filter_bookings: list[dict] = []
     my_bookings_all: list[dict] = []
     my_bookings_room: list[dict] = []
     if user_uid:
@@ -167,6 +171,16 @@ def root():
         if filter_room_id:
             my_bookings_room = list_user_bookings_for_room(
                 db, user_uid, filter_room_id
+            )
+    if day_filter:
+        parsed_day = parse_date_yyyy_mm_dd(day_filter)
+        if parsed_day is None:
+            error_message = "Day filter must be YYYY-MM-DD."
+            day_filter = ""
+        else:
+            day_filter = parsed_day.isoformat()
+            day_filter_bookings = list_bookings_for_day_all_rooms(
+                db, day_filter
             )
 
     return render_template(
@@ -177,7 +191,32 @@ def root():
         my_bookings_all=my_bookings_all,
         my_bookings_room=my_bookings_room,
         filter_room_id=filter_room_id,
+        day_filter=day_filter,
+        day_filter_bookings=day_filter_bookings,
         current_user_uid=user_uid,
+    )
+
+
+@app.route("/room/<room_id>", methods=["GET"])
+def room_detail(room_id: str):
+    id_token = request.cookies.get("token")
+    claims = verify_firebase_token(id_token)
+
+    room_ref = db.collection(ROOMS_COLLECTION).document(room_id)
+    room_snap = room_ref.get()
+    if not room_snap.exists:
+        return redirect(url_for("root"))
+
+    room_data = room_snap.to_dict() or {}
+    room_name = room_data.get("name", "")
+    bookings = list_all_bookings_for_room(db, room_id)
+
+    return render_template(
+        "room_detail.html",
+        user_data=claims,
+        room_id=room_id,
+        room_name=room_name,
+        room_bookings=bookings,
     )
 
 
