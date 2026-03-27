@@ -110,6 +110,21 @@
       background: #fafafa;
       border-radius: 3px;
     }
+
+    .room-delete-form {
+      display: inline;
+      margin-left: 0.75rem;
+    }
+
+    .btn-room-delete {
+      padding: 0.3rem 0.6rem;
+      cursor: pointer;
+      font-size: 0.85rem;
+      border: 1px solid #c00;
+      background: #fff0f0;
+      color: #700;
+      border-radius: 3px;
+    }
   </style>
 </head>
 
@@ -131,7 +146,18 @@
   <h2>Rooms</h2>
   <ul class="room-list">
     {% for room in rooms %}
-    <li>{{ room.name }}</li>
+    <li>
+      {{ room.name }}
+      {% if user_data and room.created_by_uid == current_user_uid %}
+      <form class="room-delete-form" method="post" action="{{ url_for('root') }}">
+        <input type="hidden" name="form_type" value="delete_room" />
+        <input type="hidden" name="room_id" value="{{ room.id }}" />
+        <button type="submit" class="btn-room-delete" onclick="return confirm('Delete this room? This will fail if any bookings exist.')">
+          Delete room
+        </button>
+      </form>
+      {% endif %}
+    </li>
     {% else %}
     <li>No rooms yet. Add one below (sign in first).</li>
     {% endfor %}

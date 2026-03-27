@@ -17,6 +17,7 @@ from bookings import (
     get_booking,
     format_hhmm,
 )
+from rooms import delete_room_if_permitted
 from firestore_models import ROOMS_COLLECTION
 
 if sys.version_info >= (3, 14):
@@ -52,7 +53,13 @@ def _load_rooms() -> list[dict]:
     rooms: list[dict] = []
     for doc in rooms_docs:
         data = doc.to_dict() or {}
-        rooms.append({"id": doc.id, "name": data.get("name", "")})
+        rooms.append(
+            {
+                "id": doc.id,
+                "name": data.get("name", ""),
+                "created_by_uid": data.get("created_by_uid", ""),
+            }
+        )
     rooms.sort(key=lambda r: (r["name"].lower(), r["id"]))
     return rooms
 
@@ -138,6 +145,14 @@ def root():
                     else:
                         return redirect(url_for("root"))
 
+                elif form_type == "delete_room":
+                    room_id = (request.form.get("room_id") or "").strip()
+                    ok, err = delete_room_if_permitted(db, room_id, user_uid)
+                    if not ok:
+                        error_message = err or "Could not delete room."
+                    else:
+                        return redirect(url_for("root"))
+
                 else:
                     error_message = "Unknown form."
 
@@ -162,6 +177,7 @@ def root():
         my_bookings_all=my_bookings_all,
         my_bookings_room=my_bookings_room,
         filter_room_id=filter_room_id,
+        current_user_uid=user_uid,
     )
 
 
