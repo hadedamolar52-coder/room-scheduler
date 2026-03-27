@@ -60,6 +60,26 @@
   {% else %}
   <p>No bookings for this room yet.</p>
   {% endif %}
+
+  <h2>Occupancy (next 5 days, 09:00-18:00)</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Booked Minutes (09:00-18:00)</th>
+        <th>Occupancy %</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for o in occupancy_next_5_days %}
+      <tr>
+        <td>{{ o.day_id }}</td>
+        <td>{{ o.booked_minutes }}</td>
+        <td>{{ '%.2f'|format(o.occupancy_pct) }}%</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
 </body>
 
 </html>

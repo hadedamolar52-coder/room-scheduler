@@ -1,5 +1,6 @@
 import os
 import sys
+from datetime import date, timedelta
 from flask import Flask, render_template, request, redirect, url_for
 
 from google.auth.transport import requests as google_requests
@@ -210,6 +211,37 @@ def room_detail(room_id: str):
     room_data = room_snap.to_dict() or {}
     room_name = room_data.get("name", "")
     bookings = list_all_bookings_for_room(db, room_id)
+    occupancy_next_5_days: list[dict] = []
+
+    
+    window_start = 9 * 60
+    window_end = 18 * 60
+    window_total = window_end - window_start  # 540 minutes
+    today = date.today()
+
+    for offset in range(5):
+        day = today + timedelta(days=offset)
+        day_id = day.isoformat()
+        booked_minutes = 0
+
+        for b in bookings:
+            if b.get("day_id") != day_id:
+                continue
+            start_m = int(b.get("start_minutes", 0))
+            end_m = int(b.get("end_minutes", 0))
+            overlap_start = max(start_m, window_start)
+            overlap_end = min(end_m, window_end)
+            if overlap_end > overlap_start:
+                booked_minutes += overlap_end - overlap_start
+
+        occupancy_pct = round((booked_minutes / window_total) * 100, 2)
+        occupancy_next_5_days.append(
+            {
+                "day_id": day_id,
+                "booked_minutes": booked_minutes,
+                "occupancy_pct": occupancy_pct,
+            }
+        )
 
     return render_template(
         "room_detail.html",
@@ -217,6 +249,7 @@ def room_detail(room_id: str):
         room_id=room_id,
         room_name=room_name,
         room_bookings=bookings,
+        occupancy_next_5_days=occupancy_next_5_days,
     )
 
 
