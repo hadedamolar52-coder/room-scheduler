@@ -214,6 +214,9 @@ def room_detail(room_id: str):
     occupancy_next_5_days: list[dict] = []
 
     
+    earliest_free_slot: dict | None = None
+
+    
     window_start = 9 * 60
     window_end = 18 * 60
     window_total = window_end - window_start  # 540 minutes
@@ -224,6 +227,8 @@ def room_detail(room_id: str):
         day_id = day.isoformat()
         booked_minutes = 0
 
+        
+        intervals: list[tuple[int, int]] = []
         for b in bookings:
             if b.get("day_id") != day_id:
                 continue
@@ -233,6 +238,7 @@ def room_detail(room_id: str):
             overlap_end = min(end_m, window_end)
             if overlap_end > overlap_start:
                 booked_minutes += overlap_end - overlap_start
+                intervals.append((overlap_start, overlap_end))
 
         occupancy_pct = round((booked_minutes / window_total) * 100, 2)
         occupancy_next_5_days.append(
@@ -243,6 +249,42 @@ def room_detail(room_id: str):
             }
         )
 
+        if earliest_free_slot is not None:
+            continue
+
+        
+        intervals.sort(key=lambda x: (x[0], x[1]))
+        merged: list[tuple[int, int]] = []
+        for s, e in intervals:
+            if not merged or s > merged[-1][1]:
+                merged.append((s, e))
+            else:
+                merged[-1] = (merged[-1][0], max(merged[-1][1], e))
+
+        pointer = window_start
+        free_start: int | None = None
+        free_end: int | None = None
+        for s, e in merged:
+            if s > pointer:
+                free_start = pointer
+                free_end = s
+                break
+            pointer = max(pointer, e)
+
+        if free_start is None and pointer < window_end:
+            free_start = pointer
+            free_end = window_end
+
+        if free_start is not None and free_end is not None and free_start < free_end:
+            earliest_free_slot = {
+                "day_id": day_id,
+                "start_minutes": free_start,
+                "end_minutes": free_end,
+                "start_label": format_hhmm(free_start),
+                "end_label": format_hhmm(free_end),
+            }
+            break
+
     return render_template(
         "room_detail.html",
         user_data=claims,
@@ -250,6 +292,7 @@ def room_detail(room_id: str):
         room_name=room_name,
         room_bookings=bookings,
         occupancy_next_5_days=occupancy_next_5_days,
+        earliest_free_slot=earliest_free_slot,
     )
 
 

@@ -80,6 +80,16 @@
       {% endfor %}
     </tbody>
   </table>
+
+  <h2>Earliest free slot (next 5 days, 09:00-18:00)</h2>
+  {% if earliest_free_slot %}
+  <p>
+    {{ earliest_free_slot.day_id }}:
+    {{ earliest_free_slot.start_label }} - {{ earliest_free_slot.end_label }}
+  </p>
+  {% else %}
+  <p>No free slot available in the next 5 days (09:00-18:00).</p>
+  {% endif %}
 </body>
 
 </html>
