@@ -213,25 +213,33 @@ def room_detail(room_id: str):
     bookings = list_all_bookings_for_room(db, room_id)
     occupancy_next_5_days: list[dict] = []
 
-    
     earliest_free_slot: dict | None = None
-
-    
     window_start = 9 * 60
     window_end = 18 * 60
     window_total = window_end - window_start  # 540 minutes
     today = date.today()
+
+    calendar_hours: list[dict] = []
+    calendar_next_5_days: list[dict] = []
+    for h_start in range(window_start, window_end, 60):
+        h_end = min(h_start + 60, window_end)
+        calendar_hours.append(
+            {
+                "start_minutes": h_start,
+                "end_minutes": h_end,
+                "label": f"{format_hhmm(h_start)}-{format_hhmm(h_end)}",
+            }
+        )
 
     for offset in range(5):
         day = today + timedelta(days=offset)
         day_id = day.isoformat()
         booked_minutes = 0
 
-        
+        day_bookings = [b for b in bookings if b.get("day_id") == day_id]
+
         intervals: list[tuple[int, int]] = []
-        for b in bookings:
-            if b.get("day_id") != day_id:
-                continue
+        for b in day_bookings:
             start_m = int(b.get("start_minutes", 0))
             end_m = int(b.get("end_minutes", 0))
             overlap_start = max(start_m, window_start)
@@ -249,10 +257,6 @@ def room_detail(room_id: str):
             }
         )
 
-        if earliest_free_slot is not None:
-            continue
-
-        
         intervals.sort(key=lambda x: (x[0], x[1]))
         merged: list[tuple[int, int]] = []
         for s, e in intervals:
@@ -275,7 +279,12 @@ def room_detail(room_id: str):
             free_start = pointer
             free_end = window_end
 
-        if free_start is not None and free_end is not None and free_start < free_end:
+        if (
+            earliest_free_slot is None
+            and free_start is not None
+            and free_end is not None
+            and free_start < free_end
+        ):
             earliest_free_slot = {
                 "day_id": day_id,
                 "start_minutes": free_start,
@@ -283,7 +292,36 @@ def room_detail(room_id: str):
                 "start_label": format_hhmm(free_start),
                 "end_label": format_hhmm(free_end),
             }
-            break
+
+        calendar_slots: list[dict] = []
+        for slot in calendar_hours:
+            s = int(slot["start_minutes"])
+            e = int(slot["end_minutes"])
+            cell_label = ""
+            for b in day_bookings:
+                start_m = int(b.get("start_minutes", 0))
+                end_m = int(b.get("end_minutes", 0))
+                if end_m <= s or start_m >= e:
+                    continue
+                overlap_s = max(start_m, s)
+                overlap_e = min(end_m, e)
+                if overlap_e > overlap_s:
+                    cell_label = f"{format_hhmm(overlap_s)}-{format_hhmm(overlap_e)}"
+                break
+            calendar_slots.append(
+                {
+                    "start_minutes": s,
+                    "end_minutes": e,
+                    "label": cell_label,
+                }
+            )
+
+        calendar_next_5_days.append(
+            {
+                "day_id": day_id,
+                "slots": calendar_slots,
+            }
+        )
 
     return render_template(
         "room_detail.html",
@@ -293,6 +331,8 @@ def room_detail(room_id: str):
         room_bookings=bookings,
         occupancy_next_5_days=occupancy_next_5_days,
         earliest_free_slot=earliest_free_slot,
+        calendar_hours=calendar_hours,
+        calendar_next_5_days=calendar_next_5_days,
     )
 
 

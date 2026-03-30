@@ -6,17 +6,56 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Room Detail</title>
   <style>
+    :root {
+      --bg: #ffffff;
+      --text: #0f172a;
+      --muted: #64748b;
+      --border: #e2e8f0;
+      --card: #f8fafc;
+      --primary: #2563eb;
+      --primary-weak: rgba(37, 99, 235, 0.1);
+      --danger: #dc2626;
+      --danger-weak: rgba(220, 38, 38, 0.1);
+      --success: #16a34a;
+      --success-weak: rgba(22, 163, 74, 0.12);
+      --shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+    }
+
     body {
       font-family: sans-serif;
       max-width: 720px;
       margin: 1rem auto;
       padding: 0 1rem;
+      color: var(--text);
+      background: var(--bg);
+    }
+
+    a {
+      color: var(--primary);
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    .card {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1rem;
+      box-shadow: var(--shadow);
+      margin-top: 1rem;
+    }
+
+    .card-title {
+      margin: 0 0 0.75rem 0;
+      font-size: 1.05rem;
     }
 
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-top: 1rem;
       font-size: 0.95rem;
     }
 
@@ -30,66 +69,191 @@
     th {
       background: #f5f5f5;
     }
+
+    .muted {
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 0.2rem 0.55rem;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      font-size: 0.85rem;
+      background: #fff;
+    }
+
+    .progress {
+      background: var(--primary-weak);
+      border: 1px solid rgba(37, 99, 235, 0.25);
+      border-radius: 999px;
+      overflow: hidden;
+      height: 10px;
+      width: 160px;
+      vertical-align: middle;
+    }
+
+    .progress > div {
+      height: 100%;
+      background: var(--primary);
+      width: 0%;
+    }
+
+    .progressFill {
+      height: 100%;
+      width: 0%;
+      background: var(--primary);
+    }
+
+    .calendar-wrap {
+      overflow-x: auto;
+    }
+
+    td {
+      font-size: 0.9rem;
+      white-space: nowrap;
+    }
+
+    .calendar-cell {
+      min-width: 90px;
+      background: #fff;
+    }
+
+    .calendar-free {
+      background: rgba(22, 163, 74, 0.06);
+    }
+
+    .calendar-booked {
+      background: rgba(220, 38, 38, 0.07);
+      border-color: rgba(220, 38, 38, 0.25);
+    }
+
+    .slot-label {
+      font-weight: 600;
+      font-size: 0.86rem;
+      color: #111827;
+    }
+
   </style>
 </head>
 
 <body>
   <p><a href="{{ url_for('root') }}">&larr; Back to main page</a></p>
-  <h1>Room: {{ room_name }}</h1>
+  <h1 style="margin-top: 0;">Room: {{ room_name }}</h1>
 
-  <h2>All bookings for this room</h2>
-  {% if room_bookings %}
-  <table>
-    <thead>
-      <tr>
-        <th>Date</th>
-        <th>Start</th>
-        <th>End</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for b in room_bookings %}
-      <tr>
-        <td>{{ b.day_id }}</td>
-        <td>{{ b.start_label }}</td>
-        <td>{{ b.end_label }}</td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
-  {% else %}
-  <p>No bookings for this room yet.</p>
-  {% endif %}
+  <div class="card">
+    <h2 class="card-title">All bookings</h2>
+    <div class="muted">Listed in day order.</div>
+    {% if room_bookings %}
+    <table style="margin-top: 0.75rem;">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Start</th>
+          <th>End</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for b in room_bookings %}
+        <tr>
+          <td>{{ b.day_id }}</td>
+          <td>{{ b.start_label }}</td>
+          <td>{{ b.end_label }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p class="muted" style="margin-top: 0.75rem;">No bookings for this room yet.</p>
+    {% endif %}
+  </div>
 
-  <h2>Occupancy (next 5 days, 09:00-18:00)</h2>
-  <table>
-    <thead>
-      <tr>
-        <th>Date</th>
-        <th>Booked Minutes (09:00-18:00)</th>
-        <th>Occupancy %</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for o in occupancy_next_5_days %}
-      <tr>
-        <td>{{ o.day_id }}</td>
-        <td>{{ o.booked_minutes }}</td>
-        <td>{{ '%.2f'|format(o.occupancy_pct) }}%</td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+  <div class="card">
+    <h2 class="card-title">Occupancy (next 5 days, 09:00-18:00)</h2>
+    <table style="margin-top: 0.75rem;">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Booked Minutes</th>
+          <th>Occupancy</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for o in occupancy_next_5_days %}
+        <tr>
+          <td>{{ o.day_id }}</td>
+          <td>{{ o.booked_minutes }}</td>
+          <td>
+            <div style="display: inline-flex; align-items: center; gap: 0.75rem;">
+              <div class="progress" aria-label="Occupancy progress">
+                <div class="progressFill" data-width="{{ o.occupancy_pct }}"></div>
+              </div>
+              <span class="badge">{{ '%.2f'|format(o.occupancy_pct) }}%</span>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
 
-  <h2>Earliest free slot (next 5 days, 09:00-18:00)</h2>
-  {% if earliest_free_slot %}
-  <p>
-    {{ earliest_free_slot.day_id }}:
-    {{ earliest_free_slot.start_label }} - {{ earliest_free_slot.end_label }}
-  </p>
-  {% else %}
-  <p>No free slot available in the next 5 days (09:00-18:00).</p>
-  {% endif %}
+  <div class="card">
+    <h2 class="card-title">Earliest free slot</h2>
+    {% if earliest_free_slot %}
+    <p style="margin: 0; font-size: 1rem;">
+      <span class="badge">{{ earliest_free_slot.day_id }}</span>
+      <strong>{{ earliest_free_slot.start_label }}</strong>
+      -
+      <strong>{{ earliest_free_slot.end_label }}</strong>
+    </p>
+    {% else %}
+    <p class="muted" style="margin: 0;">No free slot available in the next 5 days (09:00-18:00).</p>
+    {% endif %}
+  </div>
+
+  <div class="card">
+    <h2 class="card-title">5-day calendar (09:00-18:00)</h2>
+    <div class="muted" style="margin-bottom: 0.75rem;">Booked cells show the booked overlap range.</div>
+    <div class="calendar-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Date</th>
+            {% for h in calendar_hours %}
+            <th>{{ h.label }}</th>
+            {% endfor %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for day in calendar_next_5_days %}
+          <tr>
+            <td>{{ day.day_id }}</td>
+            {% for slot in day.slots %}
+            <td class="calendar-cell {{ 'calendar-booked' if slot.label else 'calendar-free' }}">
+              {% if slot.label %}
+              <span class="slot-label">{{ slot.label }}</span>
+              {% endif %}
+            </td>
+            {% endfor %}
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      var fills = document.querySelectorAll(".progressFill[data-width]");
+      fills.forEach(function (el) {
+        var raw = el.getAttribute("data-width") || "0";
+        var val = Number(raw);
+        if (!Number.isFinite(val)) val = 0;
+        el.style.width = val + "%";
+      });
+    })();
+  </script>
 </body>
 
 </html>

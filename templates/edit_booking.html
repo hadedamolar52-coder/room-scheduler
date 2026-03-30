@@ -7,15 +7,45 @@
   <title>Edit Booking</title>
   <link type="text/css" rel="stylesheet" href="https://www.gstatic.com/firebasejs/ui/6.0.1/firebase-ui-auth.css" />
   <style>
+    :root {
+      --bg: #ffffff;
+      --text: #0f172a;
+      --muted: #64748b;
+      --border: #e2e8f0;
+      --card: #ffffff;
+      --primary: #2563eb;
+      --shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+    }
+
     body {
       font-family: sans-serif;
-      max-width: 720px;
+      max-width: 760px;
       margin: 1rem auto;
       padding: 0 1rem;
+      color: var(--text);
+      background: var(--bg);
     }
 
     h1 {
       margin-top: 0;
+    }
+
+    a {
+      color: var(--primary);
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1rem;
+      box-shadow: var(--shadow);
+      margin-top: 1rem;
     }
 
     .error {
@@ -41,10 +71,42 @@
       padding: 0.45rem 0.9rem;
       cursor: pointer;
       margin-top: 1rem;
+      border-radius: 8px;
+      border: 1px solid rgba(0, 0, 0, 0.1);
+      background: #f8fafc;
     }
 
     .row-actions {
       margin-top: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .row-actions button {
+      margin-top: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1.2;
+    }
+
+    .row-actions a {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1.2;
+      padding: 0.45rem 0.9rem;
+      border-radius: 8px;
+      border: 1px solid rgba(0, 0, 0, 0.1);
+      background: #f8fafc;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .row-actions a:hover {
+      text-decoration: none;
+      background: #f1f5f9;
     }
   </style>
 </head>
@@ -52,9 +114,10 @@
 <body>
   <h1>Edit Booking</h1>
 
-  {% if error_message %}
-  <p class="error">{{ error_message }}</p>
-  {% endif %}
+  <div class="card">
+    {% if error_message %}
+    <p class="error">{{ error_message }}</p>
+    {% endif %}
 
   <p>
     Room: <strong>{{ room_name }}</strong>
@@ -86,7 +149,8 @@
       <a href="{{ url_for('root') }}">Cancel</a>
       {% endif %}
     </div>
-  </form>
+    </form>
+  </div>
 </body>
 
 </html>

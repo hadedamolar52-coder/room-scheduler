@@ -7,11 +7,26 @@
   <title>Room Scheduler</title>
   <link type="text/css" rel="stylesheet" href="https://www.gstatic.com/firebasejs/ui/6.0.1/firebase-ui-auth.css" />
   <style>
+    :root {
+      --bg: #ffffff;
+      --text: #0f172a;
+      --muted: #64748b;
+      --border: #e2e8f0;
+      --card: #ffffff;
+      --primary: #2563eb;
+      --primary-weak: rgba(37, 99, 235, 0.1);
+      --danger: #dc2626;
+      --success: #16a34a;
+      --shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+    }
+
     body {
       font-family: sans-serif;
-      max-width: 720px;
+      max-width: 760px;
       margin: 1rem auto;
       padding: 0 1rem;
+      color: var(--text);
+      background: var(--bg);
     }
 
     h1 {
@@ -25,6 +40,35 @@
 
     .auth-section {
       margin-bottom: 1.5rem;
+    }
+
+    a {
+      color: var(--primary);
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1rem;
+      box-shadow: var(--shadow);
+      margin-top: 1rem;
+    }
+
+    .card-title {
+      margin: 0 0 0.5rem 0;
+      font-size: 1.05rem;
+    }
+
+    .muted {
+      color: var(--muted);
+      font-size: 0.9rem;
+      margin-top: 0;
     }
 
     #firebaseui-auth-container {
@@ -96,6 +140,10 @@
       padding: 0.25rem 0.5rem;
       cursor: pointer;
       font-size: 0.85rem;
+      border: 1px solid var(--danger);
+      background: var(--danger-weak);
+      color: var(--danger);
+      border-radius: 3px;
     }
 
     table.bookings a.btn-edit {
@@ -105,10 +153,19 @@
       text-decoration: none;
       cursor: pointer;
       font-size: 0.85rem;
-      border: 1px solid #bbb;
-      color: #111;
-      background: #fafafa;
+      border: 1px solid var(--primary);
+      color: var(--primary);
+      background: #fff;
       border-radius: 3px;
+    }
+
+    table.bookings a.btn-edit:hover {
+      background: var(--primary-weak);
+      text-decoration: none;
+    }
+
+    table.bookings button.btn-delete:hover {
+      background: rgba(220, 38, 38, 0.14);
     }
 
     .room-delete-form {
@@ -124,6 +181,10 @@
       background: #fff0f0;
       color: #700;
       border-radius: 3px;
+    }
+
+    .btn-room-delete:hover {
+      background: rgba(220, 38, 38, 0.1);
     }
   </style>
 </head>
@@ -143,8 +204,9 @@
   <p class="error">{{ error_message }}</p>
   {% endif %}
 
-  <h2>Rooms</h2>
-  <ul class="room-list">
+  <div class="card">
+    <h2 class="card-title">Rooms</h2>
+    <ul class="room-list">
     {% for room in rooms %}
     <li>
       <a href="{{ url_for('room_detail', room_id=room.id) }}">{{ room.name }}</a>
@@ -161,7 +223,8 @@
     {% else %}
     <li>No rooms yet. Add one below (sign in first).</li>
     {% endfor %}
-  </ul>
+    </ul>
+  </div>
 
   <div class="filter-bookings">
     <h3>Bookings for a single day (all rooms)</h3>
@@ -201,7 +264,7 @@
   {% endif %}
 
   {% if user_data %}
-  <div class="add-room">
+  <div class="card add-room">
     <h3>Add a room</h3>
     <form method="post" action="{{ url_for('root') }}">
       <input type="hidden" name="form_type" value="add_room" />
@@ -210,7 +273,7 @@
     </form>
   </div>
 
-  <div class="book-room">
+  <div class="card book-room">
     <h3>Book a room</h3>
     <form method="post" action="{{ url_for('root') }}">
       <input type="hidden" name="form_type" value="book_room" />
@@ -245,9 +308,10 @@
     </form>
   </div>
 
-  <h3>My bookings (all rooms)</h3>
-  {% if my_bookings_all %}
-  <table class="bookings">
+  <div class="card">
+    <h3 class="card-title">My bookings (all rooms)</h3>
+    {% if my_bookings_all %}
+    <table class="bookings">
     <thead>
       <tr>
         <th>Room</th>
@@ -278,12 +342,14 @@
       {% endfor %}
     </tbody>
   </table>
-  {% else %}
-  <p>You have no bookings yet.</p>
-  {% endif %}
+    {% else %}
+    <p class="muted">You have no bookings yet.</p>
+    {% endif %}
+  </div>
 
   <div class="filter-bookings">
-    <h3>My bookings for one room</h3>
+    <div class="card" style="margin-top: 0;">
+      <h3 class="card-title">My bookings for one room</h3>
     <form method="get" action="{{ url_for('root') }}">
       <label>
         Room
@@ -296,9 +362,10 @@
       </label>
       <button type="submit">Show</button>
     </form>
-  </div>
+    </div>
 
   {% if filter_room_id %}
+  <div class="card" style="margin-top: 1rem;">
   {% if my_bookings_room %}
   <table class="bookings">
     <thead>
@@ -334,6 +401,9 @@
   <p>No bookings for this room.</p>
   {% endif %}
   {% endif %}
+  </div>
+
+  </div>
 
   {% endif %}
 
