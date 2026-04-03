@@ -88,15 +88,24 @@ def root():
                     if not room_name:
                         error_message = "Room name is required."
                     else:
-                        room_ref = db.collection(ROOMS_COLLECTION).document()
-                        room_ref.set(
-                            {
-                                "name": room_name,
-                                "created_by_uid": user_uid,
-                                "created_at": firestore.SERVER_TIMESTAMP,
-                            }
+                        existing = (
+                            db.collection(ROOMS_COLLECTION)
+                            .where("name", "==", room_name)
+                            .limit(1)
+                            .stream()
                         )
-                        return redirect(url_for("root"))
+                        if next(existing, None) is not None:
+                            error_message = "A room with that name already exists."
+                        else:
+                            room_ref = db.collection(ROOMS_COLLECTION).document()
+                            room_ref.set(
+                                {
+                                    "name": room_name,
+                                    "created_by_uid": user_uid,
+                                    "created_at": firestore.SERVER_TIMESTAMP,
+                                }
+                            )
+                            return redirect(url_for("root"))
 
                 elif form_type == "book_room":
                     room_id = (request.form.get("booking_room_id") or "").strip()
